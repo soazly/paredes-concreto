@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Controle de Concreto - Jardim Bacabal</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#0f172a;
+color:white;
+padding-bottom:150px;
+}
+
+header{
+background:#020617;
+padding:12px;
+text-align:center;
+box-shadow:0 3px 10px rgba(0,0,0,0.6);
+}
+
+header p{
+color:#94a3b8;
+margin:2px;
+font-size:13px;
+}
+
+h1{
+font-size:20px;
+margin:4px;
+}
+
+h2{
+padding-left:10px;
+margin-top:20px;
+color:#38bdf8;
+font-size:16px;
+}
+
+.container{
+display:grid;
+grid-template-columns:1fr;
+gap:8px;
+padding:10px;
+}
+
+.card{
+background:#1e293b;
+padding:12px;
+border-radius:8px;
+text-align:center;
+cursor:pointer;
+border:2px solid transparent;
+font-size:16px;
+transition:0.2s;
+}
+
+.card.active{
+background:#0ea5e9;
+border-color:#38bdf8;
+transform:scale(1.02);
+}
+
+.volume{
+font-size:18px;
+font-weight:bold;
+margin-top:3px;
+}
+
+.footer{
+position:fixed;
+bottom:0;
+width:100%;
+background:#020617;
+padding:10px;
+text-align:center;
+box-shadow:0 -3px 10px rgba(0,0,0,0.7);
+}
+
+.total{
+font-size:16px;
+font-weight:bold;
+line-height:1.3;
+}
+
+.footer div{
+font-size:14px;
+}
+
+button{
+margin:4px;
+padding:10px 14px;
+border:none;
+border-radius:6px;
+font-size:14px;
+color:white;
+background:#ef4444;
+}
+
+button.gerar{
+background:#22c55e;
+}
+
+select{
+padding:6px;
+border-radius:6px;
+border:none;
+margin-top:4px;
+font-size:14px;
+}
+
+@media (min-width:700px){
+.container{
+grid-template-columns:1fr 1fr;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>Calculadora de Concreto</h1>
+
+<p>Obra: Jardim Bacabal</p>
+<p>Mestre de Obra: Carlos</p>
+<p>Engenheiro: Felipe Rodrigues</p>
+
+</header>
+
+<h2>Lado E</h2>
+<div class="container" id="E"></div>
+
+<h2>Paredes Centrais</h2>
+<div class="container" id="C"></div>
+
+<h2>Lado D</h2>
+<div class="container" id="D"></div>
+
+<div class="footer">
+
+<div class="total">
+Volume: <span id="volume">0</span> m³ |
+Peso: <span id="ton">0</span> t
+</div>
+
+<div>
+Paredes: <span id="qtd">0</span>
+</div>
+
+<select id="periodo">
+<option value="Matutino">Matutino</option>
+<option value="Vespertino">Vespertino</option>
+</select>
+
+<br>
+
+<button onclick="limpar()">Limpar</button>
+<button class="gerar" onclick="gerar()">Gerar Pedido</button>
+
+</div>
+
+<script>
+
+const ladoE=[
+["Parede 01 E",0.664],
+["Parede 02 E",1.182],
+["Parede 03 E",0.802],
+["Parede 04 E",0.619],
+["Parede 05 E",0.907],
+["Parede 06 E",0.757],
+["Parede 07 E",1.061],
+["Parede 08 menor",0.918],
+["Parede 09 E",0.757],
+["Parede 10 E",1.514],
+["Parede 11 E",1.338],
+["Parede 12 E",0.300],
+["Parede 13 E",0.395],
+["Parede 14 E",1.440],
+["Parede 15 E",1.114]
+]
+
+const centrais=[
+["Parede 16",1.278],
+["Parede 17",1.293],
+["Parede 18",0.568],
+["Parede 19",0.260],
+["Parede 20",0.260],
+["Parede 21",0.299],
+["Parede 22",0.260],
+["Parede 23",0.234],
+["Parede 24",0.497],
+["Parede 25 / 7 menor",1.061],
+["Parede 26 / 8 maior",0.918]
+]
+
+const ladoD=[
+["Parede 01 D",0.664],
+["Parede 02 D",1.313],
+["Parede 03 D",0.802],
+["Parede 04 D",0.619],
+["Parede 05 D",0.910],
+["Parede 06 D",0.757],
+["Parede 07 D",1.084],
+["Parede 09 D",0.757],
+["Parede 10 D",1.514],
+["Parede 11 D",1.338],
+["Parede 12 D",0.300],
+["Parede 13 D",0.395],
+["Parede 14 D",1.440],
+["Parede 15 D",1.114]
+]
+
+let total=0
+let qtd=0
+let selecionadas=[]
+
+function atualizar(){
+
+document.getElementById("volume").innerText=total.toFixed(3)
+document.getElementById("ton").innerText=(total*2.4).toFixed(2)
+document.getElementById("qtd").innerText=qtd
+
+}
+
+function criar(lista,id){
+
+const container=document.getElementById(id)
+
+lista.forEach(p=>{
+
+let card=document.createElement("div")
+card.className="card"
+
+card.innerHTML=`
+<div>${p[0]}</div>
+<div class="volume">${p[1]} m³</div>
+`
+
+card.onclick=()=>{
+
+if(card.classList.contains("active")){
+
+card.classList.remove("active")
+total-=p[1]
+qtd--
+
+selecionadas=selecionadas.filter(item=>item!==`${p[0]} (${p[1]} m³)`)
+
+}else{
+
+card.classList.add("active")
+total+=p[1]
+qtd++
+
+selecionadas.push(`${p[0]} (${p[1]} m³)`)
+
+}
+
+atualizar()
+
+}
+
+container.appendChild(card)
+
+})
+
+}
+
+criar(ladoE,"E")
+criar(centrais,"C")
+criar(ladoD,"D")
+
+function limpar(){
+
+document.querySelectorAll(".card").forEach(c=>{
+c.classList.remove("active")
+})
+
+total=0
+qtd=0
+selecionadas=[]
+
+atualizar()
+
+}
+
+function gerar(){
+
+let periodo=document.getElementById("periodo").value
+
+let texto=`OBRA: Jardim Bacabal
+Mestre de Obra: Carlos
+Engenheiro: Felipe Rodrigues
+
+Período: ${periodo}
+
+Volume solicitado:
+${total.toFixed(3)} m³
+
+Peso aproximado:
+${(total*2.4).toFixed(2)} toneladas
+
+Paredes concretadas:
+${selecionadas.join("\n")}
+
+Total de paredes:
+${qtd}`
+
+navigator.clipboard.writeText(texto)
+
+alert("Pedido copiado! Agora é só colar no WhatsApp.")
+
+}
+
+</script>
+
+</body>
+</html>
