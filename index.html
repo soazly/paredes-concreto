@@ -42,10 +42,16 @@ font-size:16px;
 }
 
 .container{
-display:grid;
-grid-template-columns:1fr;
+display:flex;
+flex-direction:column;
 gap:8px;
 padding:10px;
+}
+
+.linha{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
 }
 
 .card{
@@ -55,8 +61,13 @@ border-radius:8px;
 text-align:center;
 cursor:pointer;
 border:2px solid transparent;
-font-size:16px;
+font-size:14px;
 transition:0.2s;
+}
+
+.card:hover{
+transform:scale(1.03);
+border-color:#38bdf8;
 }
 
 .card.active{
@@ -66,7 +77,7 @@ transform:scale(1.02);
 }
 
 .volume{
-font-size:18px;
+font-size:16px;
 font-weight:bold;
 margin-top:3px;
 }
@@ -99,6 +110,7 @@ border-radius:6px;
 font-size:14px;
 color:white;
 background:#ef4444;
+cursor:pointer;
 }
 
 button.gerar{
@@ -111,12 +123,6 @@ border-radius:6px;
 border:none;
 margin-top:4px;
 font-size:14px;
-}
-
-@media (min-width:700px){
-.container{
-grid-template-columns:1fr 1fr;
-}
 }
 
 </style>
@@ -134,14 +140,11 @@ grid-template-columns:1fr 1fr;
 
 </header>
 
-<h2>Lado E</h2>
-<div class="container" id="E"></div>
+<h2>Paredes Laterais (E / D)</h2>
+<div class="container" id="pares"></div>
 
 <h2>Paredes Centrais</h2>
 <div class="container" id="C"></div>
-
-<h2>Lado D</h2>
-<div class="container" id="D"></div>
 
 <div class="footer">
 
@@ -186,20 +189,6 @@ const ladoE=[
 ["Parede 15 E",1.114]
 ]
 
-const centrais=[
-["Parede 16",1.278],
-["Parede 17",1.293],
-["Parede 18",0.568],
-["Parede 19",0.260],
-["Parede 20",0.260],
-["Parede 21",0.299],
-["Parede 22",0.260],
-["Parede 23",0.234],
-["Parede 24",0.497],
-["Parede 25 / 7 menor",1.061],
-["Parede 26 / 8 maior",0.918]
-]
-
 const ladoD=[
 ["Parede 01 D",0.664],
 ["Parede 02 D",1.313],
@@ -217,23 +206,31 @@ const ladoD=[
 ["Parede 15 D",1.114]
 ]
 
+const centrais=[
+["Parede 16",1.278],
+["Parede 17",1.293],
+["Parede 18",0.568],
+["Parede 19",0.260],
+["Parede 20",0.260],
+["Parede 21",0.299],
+["Parede 22",0.260],
+["Parede 23",0.234],
+["Parede 24",0.497],
+["Parede 25 / 7 menor",1.061],
+["Parede 26 / 8 maior",0.918]
+]
+
 let total=0
 let qtd=0
 let selecionadas=[]
 
 function atualizar(){
-
 document.getElementById("volume").innerText=total.toFixed(3)
 document.getElementById("ton").innerText=(total*2.4).toFixed(2)
 document.getElementById("qtd").innerText=qtd
-
 }
 
-function criar(lista,id){
-
-const container=document.getElementById(id)
-
-lista.forEach(p=>{
+function criarCard(p){
 
 let card=document.createElement("div")
 card.className="card"
@@ -246,39 +243,61 @@ card.innerHTML=`
 card.onclick=()=>{
 
 if(card.classList.contains("active")){
-
 card.classList.remove("active")
 total-=p[1]
 qtd--
-
 selecionadas=selecionadas.filter(item=>item!==`${p[0]} (${p[1]} m³)`)
-
 }else{
-
 card.classList.add("active")
 total+=p[1]
 qtd++
-
 selecionadas.push(`${p[0]} (${p[1]} m³)`)
-
 }
 
 atualizar()
 
 }
 
-container.appendChild(card)
+return card
+}
 
+function criarPares(){
+
+const container=document.getElementById("pares")
+container.innerHTML=""
+
+let max = Math.max(ladoE.length, ladoD.length)
+
+for(let i=0;i<max;i++){
+
+let linha=document.createElement("div")
+linha.className="linha"
+
+if(ladoE[i]){
+linha.appendChild(criarCard(ladoE[i]))
+}else{
+linha.appendChild(document.createElement("div"))
+}
+
+if(ladoD[i]){
+linha.appendChild(criarCard(ladoD[i]))
+}else{
+linha.appendChild(document.createElement("div"))
+}
+
+container.appendChild(linha)
+
+}
+
+// centrais
+const c=document.getElementById("C")
+centrais.forEach(p=>{
+c.appendChild(criarCard(p))
 })
 
 }
 
-criar(ladoE,"E")
-criar(centrais,"C")
-criar(ladoD,"D")
-
 function limpar(){
-
 document.querySelectorAll(".card").forEach(c=>{
 c.classList.remove("active")
 })
@@ -288,7 +307,6 @@ qtd=0
 selecionadas=[]
 
 atualizar()
-
 }
 
 function gerar(){
@@ -313,11 +331,12 @@ ${selecionadas.join("\n")}
 Total de paredes:
 ${qtd}`
 
-navigator.clipboard.writeText(texto)
-
-alert("Pedido copiado! Agora é só colar no WhatsApp.")
+let url="https://wa.me/?text="+encodeURIComponent(texto)
+window.open(url,"_blank")
 
 }
+
+criarPares()
 
 </script>
 
