@@ -150,7 +150,7 @@ font-size:14px;
 
 <div class="total">
 Volume c/ perda: <span id="volume">0</span> m³ |
-Peso: <span id="ton">0</span> t
+Peso (real): <span id="ton">0</span> t
 </div>
 
 <div>
@@ -227,7 +227,7 @@ let selecionadas=[]
 function atualizar(){
 
 let volumeComPerda = total * 1.10
-let peso = volumeComPerda * 2.5
+let peso = total * 2.5 // 🔥 aqui mudou
 
 document.getElementById("volume").innerText=volumeComPerda.toFixed(3)
 document.getElementById("ton").innerText=peso.toFixed(2)
@@ -294,7 +294,6 @@ container.appendChild(linha)
 
 }
 
-// centrais
 const c=document.getElementById("C")
 centrais.forEach(p=>{
 c.appendChild(criarCard(p))
@@ -319,7 +318,7 @@ function gerar(){
 let periodo=document.getElementById("periodo").value
 
 let volumeComPerda = total * 1.10
-let peso = volumeComPerda * 2.5
+let peso = total * 2.5 // 🔥 aqui também
 
 let texto=`OBRA: Jardim Bacabal
 Mestre de Obra: Carlos
@@ -330,7 +329,7 @@ Período: ${periodo}
 Volume solicitado (c/ 10% perda):
 ${volumeComPerda.toFixed(3)} m³
 
-Peso aproximado:
+Peso real:
 ${peso.toFixed(2)} toneladas
 
 Paredes concretadas:
